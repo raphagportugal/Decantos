@@ -1,0 +1,7 @@
+.next
+node_modules
+.npm-cache
+out
+work/*.log
+work/*.err.log
+.env*.local

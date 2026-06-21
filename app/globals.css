@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+:root {
+  --background: #faf8f3;
+  --foreground: #1e1e1e;
+  --muted: #6b6b6b;
+  --line: #d9d3c9;
+  --accent: #9a6b3f;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-literata);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--background);
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: rgba(154, 107, 63, 0.18);
+}
+
+a {
+  color: inherit;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.22em;
+}
+
+.prose-decantos {
+  color: var(--foreground);
+  font-family: var(--font-literata), Georgia, serif;
+  font-size: clamp(1.06rem, 0.98rem + 0.28vw, 1.2rem);
+  line-height: 1.82;
+}
+
+.prose-decantos p {
+  margin: 0 0 1.45em;
+}
+
+.prose-decantos h2 {
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-size: clamp(1.35rem, 1.18rem + 0.7vw, 1.85rem);
+  line-height: 1.2;
+  margin: 2.6em 0 0.75em;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.prose-decantos h3 {
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-size: 1.08rem;
+  line-height: 1.35;
+  margin: 2.1em 0 0.7em;
+  font-weight: 600;
+}
+
+.prose-decantos blockquote {
+  border-left: 1px solid var(--accent);
+  color: var(--muted);
+  font-style: italic;
+  margin: 2rem 0;
+  padding-left: 1.25rem;
+}
+
+.prose-decantos ul,
+.prose-decantos ol {
+  margin: 0 0 1.5em 1.2em;
+  padding: 0;
+}
+
+.prose-decantos li {
+  margin: 0.35em 0;
+}
