@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const navItems = [
   { href: "/decantacoes", label: "Decantações" },
@@ -7,7 +8,32 @@ const navItems = [
   { href: "/arquivo", label: "Arquivo" },
 ];
 
-export function SiteHeader() {
+export async function SiteHeader() {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data: profile } = user
+    ? await supabase
+        .from("profiles")
+        .select("role, ativo")
+        .eq("auth_user_id", user.id)
+        .eq("ativo", true)
+        .maybeSingle()
+    : { data: null };
+
+  const role = profile?.role;
+  const canWrite = role === "author" || role === "moderator";
+  const isModerator = role === "moderator";
+  const accessItems = user
+    ? [
+        ...(canWrite ? [{ href: "/mesa", label: "Escrever" }] : []),
+        ...(isModerator ? [{ href: "/admin", label: "Admin" }] : []),
+      ]
+    : [{ href: "/entrar", label: "Entrar" }];
+  const items = [...navItems, ...accessItems];
+
   return (
     <header className="border-b border-line/60">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-5 py-5 sm:px-8 md:py-6">
@@ -26,7 +52,7 @@ export function SiteHeader() {
           aria-label="Principal"
           className="flex flex-wrap justify-end gap-x-5 gap-y-2 text-[0.8rem] text-muted sm:gap-x-7"
         >
-          {navItems.map((item) => (
+          {items.map((item) => (
             <Link
               key={item.href}
               href={item.href}
