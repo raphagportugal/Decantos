@@ -1,9 +1,12 @@
 import Link from "next/link";
-import { formatDateUpper, getAllTextos } from "@/lib/textos";
+import {
+  formatarDataEditorial,
+  formatarNumeroDecantacao,
+  getLatestDecantacao,
+} from "@/lib/decantacoes";
 
 export default function Home() {
-  const textos = getAllTextos();
-  const destaque = textos[0];
+  const destaque = getLatestDecantacao();
 
   return (
     <div className="relative mx-auto max-w-6xl overflow-hidden px-5 py-16 sm:px-8 md:py-24">
@@ -37,14 +40,14 @@ export default function Home() {
           </p>
           <article className="mt-7 md:mt-0">
             <p className="text-xs uppercase tracking-[0.16em] text-muted">
-              DECANTAÇÃO #001 · {formatDateUpper(destaque.date)} ·{" "}
-              {destaque.readingTime} MIN DE LEITURA
+              {formatarNumeroDecantacao(destaque.numero)} ·{" "}
+              {formatarDataEditorial(destaque.data)} · {destaque.tempoLeituraEditorial}
             </p>
             <h2 className="mt-5 max-w-3xl font-serif text-4xl font-semibold leading-[1.05] text-foreground md:text-5xl">
-              {destaque.title}
+              {destaque.titulo}
             </h2>
             <p className="mt-6 max-w-2xl font-body text-lg leading-8 text-muted">
-              {destaque.description}
+              {destaque.trecho}
             </p>
             <Link
               href={`/textos/${destaque.slug}`}

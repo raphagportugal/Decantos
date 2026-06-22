@@ -3,34 +3,34 @@ import { notFound } from "next/navigation";
 import { evaluate } from "@mdx-js/mdx";
 import * as runtime from "react/jsx-runtime";
 import {
-  formatDateUpper,
-  getDecantacaoNumber,
-  getTextoBySlug,
-  getTextoSlugs,
-} from "@/lib/textos";
+  formatarDataEditorial,
+  formatarNumeroDecantacao,
+  getDecantacaoBySlug,
+  getPublishedDecantacaoSlugs,
+} from "@/lib/decantacoes";
 
-type TextoPageProps = {
+type DecantacaoPageProps = {
   params: Promise<{ slug: string }>;
 };
 
 export function generateStaticParams() {
-  return getTextoSlugs().map((slug) => ({ slug }));
+  return getPublishedDecantacaoSlugs().map((slug) => ({ slug }));
 }
 
-export async function generateMetadata({ params }: TextoPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: DecantacaoPageProps): Promise<Metadata> {
   const { slug } = await params;
 
   try {
-    const texto = getTextoBySlug(slug);
+    const decantacao = getDecantacaoBySlug(slug);
 
     return {
-      title: texto.title,
-      description: texto.description,
+      title: decantacao.titulo,
+      description: decantacao.trecho,
       openGraph: {
-        title: texto.title,
-        description: texto.description,
+        title: decantacao.titulo,
+        description: decantacao.trecho,
         type: "article",
-        publishedTime: texto.date,
+        publishedTime: decantacao.data,
       },
     };
   } catch {
@@ -38,16 +38,15 @@ export async function generateMetadata({ params }: TextoPageProps): Promise<Meta
   }
 }
 
-export default async function TextoPage({ params }: TextoPageProps) {
+export default async function DecantacaoPage({ params }: DecantacaoPageProps) {
   const { slug } = await params;
 
-  if (!getTextoSlugs().includes(slug)) {
+  if (!getPublishedDecantacaoSlugs().includes(slug)) {
     notFound();
   }
 
-  const texto = getTextoBySlug(slug);
-  const decantacaoNumber = getDecantacaoNumber(slug);
-  const { default: MDXContent } = await evaluate(texto.content, {
+  const decantacao = getDecantacaoBySlug(slug);
+  const { default: MDXContent } = await evaluate(decantacao.conteudo, {
     ...runtime,
     development: false,
   });
@@ -61,15 +60,15 @@ export default async function TextoPage({ params }: TextoPageProps) {
 
       <header className="relative mx-auto max-w-[70ch] border-b border-wine/20 pb-12 md:pb-14">
         <p className="mb-7 text-[0.68rem] uppercase leading-5 tracking-[0.18em] text-wine">
-          DECANTAÇÃO {decantacaoNumber} · {formatDateUpper(texto.date)} ·{" "}
-          {texto.readingTime} MIN DE LEITURA
+          {formatarNumeroDecantacao(decantacao.numero)} ·{" "}
+          {formatarDataEditorial(decantacao.data)} · {decantacao.tempoLeituraEditorial}
         </p>
 
         <h1 className="font-serif text-[2.75rem] font-semibold leading-[0.98] text-foreground sm:text-6xl md:text-7xl">
-          {texto.title}
+          {decantacao.titulo}
         </h1>
         <p className="mt-8 max-w-[62ch] font-body text-xl leading-9 text-muted">
-          {texto.subtitle}
+          {decantacao.trecho}
         </p>
       </header>
 

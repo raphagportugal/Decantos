@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 const navItems = [
-  { href: "/textos", label: "Decantações" },
+  { href: "/decantacoes", label: "Decantações" },
   { href: "/manifesto", label: "Manifesto" },
   { href: "/arquivo", label: "Arquivo" },
 ];
@@ -22,7 +22,10 @@ export function SiteHeader() {
           />
         </Link>
 
-        <nav aria-label="Principal" className="flex flex-wrap justify-end gap-x-5 gap-y-2 text-[0.8rem] text-muted sm:gap-x-7">
+        <nav
+          aria-label="Principal"
+          className="flex flex-wrap justify-end gap-x-5 gap-y-2 text-[0.8rem] text-muted sm:gap-x-7"
+        >
           {navItems.map((item) => (
             <Link
               key={item.href}
