@@ -4,7 +4,7 @@ import { PageIntro } from "@/components/PageIntro";
 import {
   formatarDataEditorial,
   formatarNumeroDecantacao,
-  getArquivoCronologico,
+  getArquivoCronologicoEditorial,
 } from "@/lib/decantacoes";
 
 export const metadata: Metadata = {
@@ -12,8 +12,8 @@ export const metadata: Metadata = {
   description: "Arquivo cronológico das Decantações publicadas em Decantos.",
 };
 
-export default function ArquivoPage() {
-  const archiveGroups = getArquivoCronologico();
+export default async function ArquivoPage() {
+  const archiveGroups = await getArquivoCronologicoEditorial();
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 md:py-24">

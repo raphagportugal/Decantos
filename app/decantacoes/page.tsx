@@ -4,7 +4,7 @@ import { PageIntro } from "@/components/PageIntro";
 import {
   formatarDataEditorial,
   formatarNumeroDecantacao,
-  getPublishedDecantacoes,
+  getPublishedDecantacoesEditorial,
 } from "@/lib/decantacoes";
 
 export const metadata: Metadata = {
@@ -12,8 +12,8 @@ export const metadata: Metadata = {
   description: "Acervo editorial das Decantações publicadas em Decantos.",
 };
 
-export default function DecantacoesPage() {
-  const decantacoes = getPublishedDecantacoes();
+export default async function DecantacoesPage() {
+  const decantacoes = await getPublishedDecantacoesEditorial();
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 md:py-24">

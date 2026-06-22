@@ -102,9 +102,14 @@ export function AdminPanel({ initialProfiles, initialDecantacoes }: AdminPanelPr
     setFeedback("Usuário atualizado.");
   }
 
-  async function atualizarDecantacao(decantacaoId: string, status: DecantacaoStatus) {
+  async function atualizarDecantacao(decantacao: AdminDecantacao, status: DecantacaoStatus) {
+    if (status === "publicada" && decantacao.status !== "pronta_para_publicar") {
+      setFeedback("Apenas Decantações prontas podem ser publicadas.");
+      return;
+    }
+
     setFeedback("");
-    setBusyId(decantacaoId);
+    setBusyId(decantacao.id);
 
     const supabase = createSupabaseBrowserClient();
     const { data, error } = await supabase
@@ -113,7 +118,7 @@ export function AdminPanel({ initialProfiles, initialDecantacoes }: AdminPanelPr
         status,
         publicado_em: status === "publicada" ? new Date().toISOString() : null,
       })
-      .eq("id", decantacaoId)
+      .eq("id", decantacao.id)
       .select("id, numero, titulo, status, updated_at, publicado_em")
       .single();
 
@@ -133,10 +138,16 @@ export function AdminPanel({ initialProfiles, initialDecantacoes }: AdminPanelPr
       publicado_em: data.publicado_em,
     } as AdminDecantacao;
 
-    setDecantacoes((current) =>
-      current.map((decantacao) => (decantacao.id === updated.id ? updated : decantacao)),
+    setDecantacoes((current) => {
+      if (updated.status === "publicada" || updated.status === "arquivada") {
+        return current.filter((item) => item.id !== updated.id);
+      }
+
+      return current.map((item) => (item.id === updated.id ? updated : item));
+    });
+    setFeedback(
+      updated.status === "publicada" ? "Decantação publicada." : "Decantação atualizada.",
     );
-    setFeedback("Decantação atualizada.");
   }
 
   return (
@@ -238,16 +249,19 @@ export function AdminPanel({ initialProfiles, initialDecantacoes }: AdminPanelPr
                   <div className="mt-5 flex flex-wrap gap-4">
                     <button
                       type="button"
-                      disabled={busyId === decantacao.id}
-                      onClick={() => atualizarDecantacao(decantacao.id, "publicada")}
-                      className="text-sm font-medium text-wine underline decoration-clay/50 transition-colors hover:text-foreground hover:decoration-wine disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled={
+                        busyId === decantacao.id ||
+                        decantacao.status !== "pronta_para_publicar"
+                      }
+                      onClick={() => atualizarDecantacao(decantacao, "publicada")}
+                      className="text-sm font-medium text-wine underline decoration-clay/50 transition-colors hover:text-foreground hover:decoration-wine disabled:cursor-not-allowed disabled:opacity-45"
                     >
                       Aprovar como publicada
                     </button>
                     <button
                       type="button"
                       disabled={busyId === decantacao.id}
-                      onClick={() => atualizarDecantacao(decantacao.id, "em_revisao")}
+                      onClick={() => atualizarDecantacao(decantacao, "em_revisao")}
                       className="text-sm font-medium text-wine underline decoration-clay/50 transition-colors hover:text-foreground hover:decoration-wine disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Voltar para revisão
@@ -255,7 +269,7 @@ export function AdminPanel({ initialProfiles, initialDecantacoes }: AdminPanelPr
                     <button
                       type="button"
                       disabled={busyId === decantacao.id}
-                      onClick={() => atualizarDecantacao(decantacao.id, "arquivada")}
+                      onClick={() => atualizarDecantacao(decantacao, "arquivada")}
                       className="text-sm font-medium text-wine underline decoration-clay/50 transition-colors hover:text-foreground hover:decoration-wine disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Arquivar

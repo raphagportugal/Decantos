@@ -56,7 +56,11 @@ export async function SiteHeader() {
             <Link
               key={item.href}
               href={item.href}
-              className="underline decoration-transparent transition-colors hover:text-foreground hover:decoration-accent"
+              className={
+                item.href === "/entrar"
+                  ? "border-b border-wine/40 pb-1 font-medium text-wine transition-colors hover:border-wine hover:text-foreground"
+                  : "underline decoration-transparent transition-colors hover:text-foreground hover:decoration-accent"
+              }
             >
               {item.label}
             </Link>

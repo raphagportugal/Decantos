@@ -2,11 +2,11 @@ import Link from "next/link";
 import {
   formatarDataEditorial,
   formatarNumeroDecantacao,
-  getLatestDecantacao,
+  getLatestDecantacaoEditorial,
 } from "@/lib/decantacoes";
 
-export default function Home() {
-  const destaque = getLatestDecantacao();
+export default async function Home() {
+  const destaque = await getLatestDecantacaoEditorial();
 
   return (
     <div className="relative mx-auto max-w-6xl overflow-hidden px-5 py-16 sm:px-8 md:py-24">

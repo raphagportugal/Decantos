@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 const WORDS_PER_MINUTE = 200;
+const WORDS_PER_PAGE = 450;
 const editableStatuses = ["rascunho", "em_revisao", "pronta_para_publicar"] as const;
 const selectDraftFields =
   "id, numero, titulo, slug, subtitulo, trecho, conteudo, tempo_leitura, status, updated_at, created_at";
@@ -33,8 +34,16 @@ function contarPalavras(texto: string) {
   return texto.trim().split(/\s+/).filter(Boolean).length;
 }
 
-function estimarTempoLeitura(conteudo: string) {
-  return Math.max(1, Math.ceil(contarPalavras(conteudo) / WORDS_PER_MINUTE));
+function estimarTempoLeitura(palavras: number) {
+  return Math.max(1, Math.ceil(palavras / WORDS_PER_MINUTE));
+}
+
+function estimarPaginas(palavras: number) {
+  return palavras > 0 ? Math.max(1, Math.ceil(palavras / WORDS_PER_PAGE)) : 0;
+}
+
+function formatarQuantidade(value: number) {
+  return new Intl.NumberFormat("pt-BR").format(value);
 }
 
 function formatarDataAtual() {
@@ -103,9 +112,21 @@ export function MesaDeEscrita({ profileId, initialDrafts }: MesaDeEscritaProps) 
 
   const selectedDraft = drafts.find((draft) => draft.id === draftId);
   const dataAtual = useMemo(formatarDataAtual, []);
-  const minutos = estimarTempoLeitura(conteudo);
+  const caracteres = conteudo.length;
+  const palavras = contarPalavras(conteudo);
+  const minutos = estimarTempoLeitura(palavras);
+  const paginas = estimarPaginas(palavras);
   const tempoLeitura = `${minutos} MIN DE LEITURA`;
   const paragrafos = separarParagrafos(conteudo);
+
+  const metricas = [
+    `${formatarQuantidade(caracteres)} ${caracteres === 1 ? "caractere" : "caracteres"}`,
+    `${formatarQuantidade(palavras)} ${palavras === 1 ? "palavra" : "palavras"}`,
+    paginas
+      ? `${formatarQuantidade(paginas)} ${paginas === 1 ? "página estimada" : "páginas estimadas"}`
+      : "0 páginas estimadas",
+    `${minutos} min de leitura`,
+  ];
 
   function carregarRascunho(draft: MesaDraft) {
     setDraftId(draft.id);
@@ -202,14 +223,17 @@ export function MesaDeEscrita({ profileId, initialDrafts }: MesaDeEscritaProps) 
     }
 
     setStatus("pronta_para_publicar");
-    setPreview(false);
+    setPreview(true);
     setFinalPreview(true);
     setFeedback("Pronta para publicar.");
   }
 
-  function PreviewFinal() {
+  function PreviewEditorial() {
     return (
-      <section aria-label="Prévia final" className="border-l border-wine/25 pl-6">
+      <section
+        aria-label="Prévia editorial"
+        className="border-l border-wine/25 pl-5 md:pl-7"
+      >
         <p className="mb-7 text-[0.68rem] uppercase leading-5 tracking-[0.18em] text-wine">
           {selectedDraft ? formatarNumero(selectedDraft.numero) : "DECANTAÇÃO #RASCUNHO"} ·{" "}
           {dataAtual} · {tempoLeitura}
@@ -219,7 +243,7 @@ export function MesaDeEscrita({ profileId, initialDrafts }: MesaDeEscritaProps) 
           {titulo || "Título da Decantação"}
         </h2>
         {subtitulo ? (
-          <p className="mt-5 max-w-[62ch] font-body text-xl leading-9 text-muted">
+          <p className="mt-5 max-w-[62ch] font-body text-xl leading-9 text-foreground/75">
             {subtitulo}
           </p>
         ) : null}
@@ -258,64 +282,77 @@ export function MesaDeEscrita({ profileId, initialDrafts }: MesaDeEscritaProps) 
         </p>
       </header>
 
-      <div className="mt-12 grid gap-12 lg:grid-cols-[1fr_0.72fr] lg:items-start">
+      <div className="mt-12 grid gap-12 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
         <section aria-label="Escrevendo" className="space-y-9">
           <div>
-            <p className="mb-6 text-xs uppercase tracking-[0.18em] text-wine">
-              Escrevendo
-            </p>
-
-            <div className="space-y-8">
-              <label className="block">
-                <span className="mb-3 block text-xs uppercase tracking-[0.16em] text-wine">
-                  Título
-                </span>
-                <input
-                  value={titulo}
-                  onChange={(event) => setTitulo(event.target.value)}
-                  placeholder="Nome da Decantação"
-                  className="w-full border-0 border-b border-wine/25 bg-transparent px-0 pb-3 font-serif text-4xl font-semibold leading-tight text-foreground outline-none transition-colors placeholder:text-muted/45 focus:border-wine"
-                />
-              </label>
-
-              <label className="block">
-                <span className="mb-3 block text-xs uppercase tracking-[0.16em] text-wine">
-                  Subtítulo
-                </span>
-                <input
-                  value={subtitulo}
-                  onChange={(event) => setSubtitulo(event.target.value)}
-                  placeholder="Opcional"
-                  className="w-full border-0 border-b border-wine/25 bg-transparent px-0 pb-3 font-body text-xl leading-8 text-foreground outline-none transition-colors placeholder:text-muted/45 focus:border-wine"
-                />
-              </label>
-
-              <label className="block">
-                <span className="mb-3 block text-xs uppercase tracking-[0.16em] text-wine">
-                  Trecho
-                </span>
-                <textarea
-                  value={trecho}
-                  onChange={(event) => setTrecho(event.target.value)}
-                  placeholder="Uma frase breve para abrir a leitura."
-                  rows={3}
-                  className="w-full resize-none border-0 border-b border-wine/25 bg-transparent px-0 pb-3 font-body text-xl leading-9 text-foreground outline-none transition-colors placeholder:text-muted/45 focus:border-wine"
-                />
-              </label>
-
-              <label className="block">
-                <span className="mb-3 block text-xs uppercase tracking-[0.16em] text-wine">
-                  Conteúdo
-                </span>
-                <textarea
-                  value={conteudo}
-                  onChange={(event) => setConteudo(event.target.value)}
-                  placeholder="Escreva em parágrafos. A mesa salva apenas rascunhos."
-                  rows={16}
-                  className="w-full resize-y border-0 border-b border-wine/25 bg-transparent px-0 pb-4 font-body text-lg leading-8 text-foreground outline-none transition-colors placeholder:text-muted/45 focus:border-wine"
-                />
-              </label>
+            <div className="mb-7 flex flex-wrap items-center justify-between gap-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-wine">
+                Escrevendo
+              </p>
+              <button
+                type="button"
+                onClick={() => setPreview((current) => !current)}
+                className="text-sm font-medium text-wine underline decoration-clay/50 transition-colors hover:text-foreground hover:decoration-wine"
+              >
+                {preview ? "Voltar à escrita" : "Prévia editorial"}
+              </button>
             </div>
+
+            {preview ? (
+              <PreviewEditorial />
+            ) : (
+              <div className="space-y-9">
+                <label className="block">
+                  <span className="mb-3 block text-xs uppercase tracking-[0.16em] text-wine">
+                    Título
+                  </span>
+                  <input
+                    value={titulo}
+                    onChange={(event) => setTitulo(event.target.value)}
+                    placeholder="Nome da Decantação"
+                    className="w-full border-0 border-b border-wine/25 bg-transparent px-0 pb-3 font-serif text-4xl font-semibold leading-tight text-foreground outline-none transition-colors placeholder:text-muted/45 focus:border-wine"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="mb-3 block text-xs uppercase tracking-[0.16em] text-wine">
+                    Subtítulo
+                  </span>
+                  <input
+                    value={subtitulo}
+                    onChange={(event) => setSubtitulo(event.target.value)}
+                    placeholder="Opcional"
+                    className="w-full border-0 border-b border-wine/25 bg-transparent px-0 pb-3 font-body text-xl leading-8 text-foreground outline-none transition-colors placeholder:text-muted/45 focus:border-wine"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="mb-3 block text-xs uppercase tracking-[0.16em] text-wine">
+                    Trecho
+                  </span>
+                  <textarea
+                    value={trecho}
+                    onChange={(event) => setTrecho(event.target.value)}
+                    placeholder="Uma frase breve para abrir a leitura."
+                    rows={3}
+                    className="w-full resize-none border-0 border-b border-wine/25 bg-transparent px-0 pb-3 font-body text-xl leading-9 text-foreground outline-none transition-colors placeholder:text-muted/45 focus:border-wine"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="mb-4 block text-xs uppercase tracking-[0.16em] text-wine">
+                    Conteúdo
+                  </span>
+                  <textarea
+                    value={conteudo}
+                    onChange={(event) => setConteudo(event.target.value)}
+                    placeholder="Escreva em parágrafos. A mesa salva apenas rascunhos."
+                    rows={22}
+                    className="min-h-[34rem] w-full resize-y border-0 border-y border-wine/20 bg-[rgba(255,252,246,0.24)] px-0 py-8 font-body text-[1.25rem] leading-10 text-foreground outline-none transition-colors placeholder:text-muted/45 focus:border-wine md:max-w-[68ch]"
+                  />
+                </label>
+              </div>
+            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-5 border-t border-wine/15 pt-6">
@@ -326,13 +363,6 @@ export function MesaDeEscrita({ profileId, initialDrafts }: MesaDeEscritaProps) 
               className="border border-wine/30 px-5 py-3 text-sm font-medium text-wine transition-colors hover:border-wine hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isSaving ? "Salvando..." : draftId ? "Atualizar rascunho" : "Salvar rascunho"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setPreview((current) => !current)}
-              className="text-sm font-medium text-wine underline decoration-clay/50 transition-colors hover:text-foreground hover:decoration-wine"
-            >
-              {preview ? "Voltar à escrita" : "Pré-visualizar"}
             </button>
             <button
               type="button"
@@ -349,12 +379,23 @@ export function MesaDeEscrita({ profileId, initialDrafts }: MesaDeEscritaProps) 
           </div>
 
           {feedback ? <p className="font-body text-sm leading-6 text-wine">{feedback}</p> : null}
-
-          {preview ? <PreviewFinal /> : null}
-          {finalPreview ? <PreviewFinal /> : null}
+          {finalPreview && !preview ? <PreviewEditorial /> : null}
         </section>
 
-        <aside className="space-y-12">
+        <aside className="space-y-12 lg:sticky lg:top-8">
+          <section aria-label="Métricas da escrita" className="border-t border-wine/20 pt-7">
+            <p className="mb-5 text-xs uppercase tracking-[0.18em] text-wine">
+              Medida do texto
+            </p>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm text-muted lg:grid-cols-1">
+              {metricas.map((metrica) => (
+                <p key={metrica} className="font-body leading-6">
+                  {metrica}
+                </p>
+              ))}
+            </div>
+          </section>
+
           <section aria-label="Meus Rascunhos" className="border-t border-wine/20 pt-7">
             <p className="mb-6 text-xs uppercase tracking-[0.18em] text-wine">
               Meus Rascunhos

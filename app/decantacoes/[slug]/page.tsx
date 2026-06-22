@@ -3,9 +3,10 @@ import { notFound } from "next/navigation";
 import { evaluate } from "@mdx-js/mdx";
 import * as runtime from "react/jsx-runtime";
 import {
+  type Decantacao,
   formatarDataEditorial,
   formatarNumeroDecantacao,
-  getDecantacaoBySlug,
+  getDecantacaoEditorialBySlug,
   getPublishedDecantacaoSlugs,
 } from "@/lib/decantacoes";
 
@@ -19,37 +20,61 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: DecantacaoPageProps): Promise<Metadata> {
   const { slug } = await params;
+  const decantacao = await getDecantacaoEditorialBySlug(slug);
 
-  try {
-    const decantacao = getDecantacaoBySlug(slug);
-
-    return {
-      title: decantacao.titulo,
-      description: decantacao.trecho,
-      openGraph: {
-        title: decantacao.titulo,
-        description: decantacao.trecho,
-        type: "article",
-        publishedTime: decantacao.data,
-      },
-    };
-  } catch {
+  if (!decantacao) {
     return {};
   }
+
+  return {
+    title: decantacao.titulo,
+    description: decantacao.trecho,
+    openGraph: {
+      title: decantacao.titulo,
+      description: decantacao.trecho,
+      type: "article",
+      publishedTime: decantacao.data,
+    },
+  };
 }
 
-export default async function DecantacaoPage({ params }: DecantacaoPageProps) {
-  const { slug } = await params;
+function PlainContent({ conteudo }: { conteudo: string }) {
+  const paragraphs = conteudo
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
 
-  if (!getPublishedDecantacaoSlugs().includes(slug)) {
-    notFound();
+  return (
+    <>
+      {paragraphs.length ? (
+        paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)
+      ) : (
+        <p>Esta Decantação ainda está procurando seu corpo.</p>
+      )}
+    </>
+  );
+}
+
+async function DecantacaoContent({ decantacao }: { decantacao: Decantacao }) {
+  if (decantacao.origem === "supabase") {
+    return <PlainContent conteudo={decantacao.conteudo} />;
   }
 
-  const decantacao = getDecantacaoBySlug(slug);
   const { default: MDXContent } = await evaluate(decantacao.conteudo, {
     ...runtime,
     development: false,
   });
+
+  return <MDXContent />;
+}
+
+export default async function DecantacaoPage({ params }: DecantacaoPageProps) {
+  const { slug } = await params;
+  const decantacao = await getDecantacaoEditorialBySlug(slug);
+
+  if (!decantacao) {
+    notFound();
+  }
 
   return (
     <article className="relative mx-auto max-w-6xl overflow-hidden px-5 pb-20 pt-16 sm:px-8 md:pb-28 md:pt-24">
@@ -67,13 +92,18 @@ export default async function DecantacaoPage({ params }: DecantacaoPageProps) {
         <h1 className="font-serif text-[2.75rem] font-semibold leading-[0.98] text-foreground sm:text-6xl md:text-7xl">
           {decantacao.titulo}
         </h1>
+        {decantacao.subtitulo ? (
+          <p className="mt-7 max-w-[62ch] font-body text-xl leading-9 text-foreground/75">
+            {decantacao.subtitulo}
+          </p>
+        ) : null}
         <p className="mt-8 max-w-[62ch] font-body text-xl leading-9 text-muted">
           {decantacao.trecho}
         </p>
       </header>
 
       <div className="prose-decantos relative mx-auto mt-14 max-w-[68ch] md:mt-16">
-        <MDXContent />
+        <DecantacaoContent decantacao={decantacao} />
       </div>
 
       <footer className="relative mx-auto mt-14 max-w-[68ch] border-t border-wine/20 pt-7 font-body text-base leading-8 text-muted md:mt-16">

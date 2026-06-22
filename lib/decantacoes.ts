@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const decantacoesDirectory = path.join(process.cwd(), "content", "textos");
 const WORDS_PER_MINUTE = 200;
@@ -13,13 +14,14 @@ export type DecantacaoFrontmatter = {
   publicado: boolean;
 };
 
-// Mesa de Escrita futura (/mesa): gerar este modelo editorial sem editar MDX manualmente.
 export type Decantacao = Omit<DecantacaoFrontmatter, "tempoLeitura"> & {
   slug: string;
+  subtitulo?: string | null;
   conteudo: string;
   tempoLeitura: string;
   tempoLeituraCalculado: string;
   tempoLeituraEditorial: string;
+  origem: "mdx" | "supabase";
 };
 
 export type ArquivoMes = {
@@ -30,6 +32,17 @@ export type ArquivoMes = {
 export type ArquivoAno = {
   ano: string;
   meses: ArquivoMes[];
+};
+
+type SupabaseDecantacaoRow = {
+  numero: number;
+  titulo: string;
+  slug: string;
+  subtitulo: string | null;
+  trecho: string;
+  conteudo: string;
+  tempo_leitura: number;
+  publicado_em: string | null;
 };
 
 function contarPalavras(conteudo: string) {
@@ -211,6 +224,7 @@ export function getDecantacaoBySlug(slug: string): Decantacao {
     tempoLeitura,
     tempoLeituraCalculado,
     tempoLeituraEditorial: formatarTempoLeituraEditorial(tempoLeitura),
+    origem: "mdx",
   };
 }
 
@@ -226,10 +240,10 @@ export function getLatestDecantacao() {
   return getPublishedDecantacoes()[0] ?? null;
 }
 
-export function getArquivoCronologico() {
+function montarArquivo(decantacoes: Decantacao[]) {
   const groups: ArquivoAno[] = [];
 
-  for (const decantacao of getPublishedDecantacoes()) {
+  for (const decantacao of decantacoes) {
     const ano = formatarAnoEditorial(decantacao.data);
     const mes = formatarMesEditorial(decantacao.data);
     let yearGroup = groups.find((group) => group.ano === ano);
@@ -258,6 +272,79 @@ export function getArquivoCronologico() {
   return groups;
 }
 
+export function getArquivoCronologico() {
+  return montarArquivo(getPublishedDecantacoes());
+}
+
 export function getPublishedDecantacaoSlugs() {
   return getPublishedDecantacoes().map((decantacao) => decantacao.slug);
+}
+
+function fromSupabaseDecantacao(row: SupabaseDecantacaoRow): Decantacao {
+  const tempoLeitura = `${row.tempo_leitura || 1} min`;
+  const data = row.publicado_em ?? new Date().toISOString();
+
+  return {
+    numero: row.numero,
+    titulo: row.titulo,
+    slug: row.slug,
+    subtitulo: row.subtitulo,
+    data,
+    trecho: row.trecho,
+    publicado: true,
+    conteudo: row.conteudo,
+    tempoLeitura,
+    tempoLeituraCalculado: tempoLeitura,
+    tempoLeituraEditorial: formatarTempoLeituraEditorial(tempoLeitura),
+    origem: "supabase",
+  };
+}
+
+async function getSupabasePublishedDecantacoes() {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("decantacoes")
+    .select("numero, titulo, slug, subtitulo, trecho, conteudo, tempo_leitura, publicado_em")
+    .eq("status", "publicada")
+    .not("publicado_em", "is", null)
+    .order("publicado_em", { ascending: false });
+
+  if (error || !data?.length) {
+    return [];
+  }
+
+  return (data as SupabaseDecantacaoRow[]).map(fromSupabaseDecantacao);
+}
+
+export async function getPublishedDecantacoesEditorial() {
+  const supabaseDecantacoes = await getSupabasePublishedDecantacoes();
+
+  return supabaseDecantacoes.length ? supabaseDecantacoes : getPublishedDecantacoes();
+}
+
+export async function getLatestDecantacaoEditorial() {
+  const decantacoes = await getPublishedDecantacoesEditorial();
+
+  return decantacoes[0] ?? null;
+}
+
+export async function getArquivoCronologicoEditorial() {
+  return montarArquivo(await getPublishedDecantacoesEditorial());
+}
+
+export async function getDecantacaoEditorialBySlug(slug: string) {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("decantacoes")
+    .select("numero, titulo, slug, subtitulo, trecho, conteudo, tempo_leitura, publicado_em")
+    .eq("slug", slug)
+    .eq("status", "publicada")
+    .not("publicado_em", "is", null)
+    .maybeSingle();
+
+  if (!error && data) {
+    return fromSupabaseDecantacao(data as SupabaseDecantacaoRow);
+  }
+
+  return getPublishedDecantacoes().find((decantacao) => decantacao.slug === slug) ?? null;
 }
