@@ -4,8 +4,8 @@ import { TextList } from "@/components/TextList";
 import { getAllTextos } from "@/lib/textos";
 
 export const metadata: Metadata = {
-  title: "Textos",
-  description: "Ensaios publicados em Decantos, ordenados dos mais recentes aos mais antigos.",
+  title: "Decantações",
+  description: "Decantações publicadas em Decantos, ordenadas das mais recentes às mais antigas.",
 };
 
 export default function TextosPage() {
@@ -13,11 +13,10 @@ export default function TextosPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 md:py-24">
-      <PageIntro eyebrow="Textos" title="Ensaios para ler sem pressa">
+      <PageIntro eyebrow="Decantações" title="Leituras para permanecer um pouco mais">
         <p>
-          Uma selecao de textos sobre o que insiste em pedir atencao: a cidade,
-          a memoria, os pequenos rituais, o cansaço e as formas possiveis de
-          reencantar o cotidiano.
+          Um arquivo vivo de ensaios breves para voltar quando a pressa perde
+          autoridade.
         </p>
       </PageIntro>
 

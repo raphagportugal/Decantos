@@ -106,6 +106,15 @@ export function getAllTextos() {
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
+export function getDecantacaoNumber(slug: string) {
+  const orderedTextos = getAllTextos().sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+  );
+  const index = orderedTextos.findIndex((texto) => texto.slug === slug);
+
+  return `#${String(index + 1).padStart(3, "0")}`;
+}
+
 export function formatDate(date: string) {
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
@@ -113,4 +122,8 @@ export function formatDate(date: string) {
     year: "numeric",
     timeZone: "UTC",
   }).format(new Date(date));
+}
+
+export function formatDateUpper(date: string) {
+  return formatDate(date).toLocaleUpperCase("pt-BR");
 }

@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { evaluate } from "@mdx-js/mdx";
 import * as runtime from "react/jsx-runtime";
-import { formatDate, getAllTextos, getTextoBySlug, getTextoSlugs } from "@/lib/textos";
+import {
+  formatDateUpper,
+  getDecantacaoNumber,
+  getTextoBySlug,
+  getTextoSlugs,
+} from "@/lib/textos";
 
 type TextoPageProps = {
   params: Promise<{ slug: string }>;
@@ -42,48 +46,41 @@ export default async function TextoPage({ params }: TextoPageProps) {
   }
 
   const texto = getTextoBySlug(slug);
-  const outrosTextos = getAllTextos().filter((item) => item.slug !== slug).slice(0, 2);
+  const decantacaoNumber = getDecantacaoNumber(slug);
   const { default: MDXContent } = await evaluate(texto.content, {
     ...runtime,
     development: false,
   });
 
   return (
-    <article className="mx-auto max-w-6xl px-5 py-14 sm:px-8 md:py-20">
-      <header className="max-w-4xl border-b border-line pb-10">
-        <div className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs uppercase tracking-[0.16em] text-muted">
-          <span>{texto.category}</span>
-          <span aria-hidden="true">/</span>
-          <time dateTime={texto.date}>{formatDate(texto.date)}</time>
-          <span aria-hidden="true">/</span>
-          <span>{texto.readingTime} min de leitura</span>
-        </div>
-        <h1 className="font-serif text-4xl leading-[1.05] text-foreground sm:text-5xl md:text-6xl">
+    <article className="relative mx-auto max-w-6xl overflow-hidden px-5 pb-20 pt-16 sm:px-8 md:pb-28 md:pt-24">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute left-[-12rem] top-10 h-[22rem] w-[22rem] rounded-full bg-[radial-gradient(circle_at_58%_44%,rgba(122,75,71,0.12),rgba(177,122,87,0.08)_42%,rgba(246,242,234,0)_72%)] blur-2xl"
+      />
+
+      <header className="relative mx-auto max-w-[70ch] border-b border-wine/20 pb-12 md:pb-14">
+        <p className="mb-7 text-[0.68rem] uppercase leading-5 tracking-[0.18em] text-wine">
+          DECANTAÇÃO {decantacaoNumber} · {formatDateUpper(texto.date)} ·{" "}
+          {texto.readingTime} MIN DE LEITURA
+        </p>
+
+        <h1 className="font-serif text-[2.75rem] font-semibold leading-[0.98] text-foreground sm:text-6xl md:text-7xl">
           {texto.title}
         </h1>
-        <p className="mt-6 max-w-3xl text-xl leading-9 text-muted">{texto.subtitle}</p>
+        <p className="mt-8 max-w-[62ch] font-body text-xl leading-9 text-muted">
+          {texto.subtitle}
+        </p>
       </header>
 
-      <div className="prose-decantos mt-12 max-w-3xl">
+      <div className="prose-decantos relative mx-auto mt-14 max-w-[68ch] md:mt-16">
         <MDXContent />
       </div>
 
-      {outrosTextos.length ? (
-        <footer className="mt-20 max-w-3xl border-t border-line pt-8">
-          <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted">Continuar lendo</p>
-          <div className="space-y-3">
-            {outrosTextos.map((item) => (
-              <Link
-                key={item.slug}
-                href={`/textos/${item.slug}`}
-                className="block font-serif text-xl underline decoration-transparent hover:text-accent hover:decoration-accent"
-              >
-                {item.title}
-              </Link>
-            ))}
-          </div>
-        </footer>
-      ) : null}
+      <footer className="relative mx-auto mt-14 max-w-[68ch] border-t border-wine/20 pt-7 font-body text-base leading-8 text-muted md:mt-16">
+        <p className="m-0 text-foreground/80">— Raphael Portugal</p>
+        <p className="m-0 mt-5 italic text-muted">Leia como quem abre uma janela.</p>
+      </footer>
     </article>
   );
 }
