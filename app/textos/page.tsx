@@ -1,1 +1,5 @@
-export { metadata, default } from "../decantacoes/page";
+import { permanentRedirect } from "next/navigation";
+
+export default function LegacyTextosPage() {
+  permanentRedirect("/decantacoes");
+}

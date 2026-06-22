@@ -50,7 +50,7 @@ export default function Home() {
               {destaque.trecho}
             </p>
             <Link
-              href={`/textos/${destaque.slug}`}
+              href={`/decantacoes/${destaque.slug}`}
               className="mt-8 inline-block text-sm font-medium text-wine underline decoration-clay/50 transition-colors hover:text-foreground hover:decoration-wine"
             >
               Ler a Decantação →

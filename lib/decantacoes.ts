@@ -13,6 +13,7 @@ export type DecantacaoFrontmatter = {
   publicado: boolean;
 };
 
+// Mesa de Escrita futura (/mesa): gerar este modelo editorial sem editar MDX manualmente.
 export type Decantacao = Omit<DecantacaoFrontmatter, "tempoLeitura"> & {
   slug: string;
   conteudo: string;

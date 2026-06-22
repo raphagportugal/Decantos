@@ -53,7 +53,7 @@ export default function ArquivoPage() {
                           </p>
                           <p className="font-body text-base leading-7 text-muted">
                             <Link
-                              href={`/textos/${decantacao.slug}`}
+                              href={`/decantacoes/${decantacao.slug}`}
                               className="font-serif text-2xl font-semibold leading-tight text-foreground underline decoration-transparent transition-colors hover:text-wine hover:decoration-clay"
                             >
                               {decantacao.titulo}

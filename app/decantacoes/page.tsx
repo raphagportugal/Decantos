@@ -46,7 +46,7 @@ export default function DecantacoesPage() {
               <div>
                 <h2 className="max-w-3xl font-serif text-3xl font-semibold leading-[1.06] text-foreground md:text-4xl">
                   <Link
-                    href={`/textos/${decantacao.slug}`}
+                    href={`/decantacoes/${decantacao.slug}`}
                     className="underline decoration-transparent transition-colors hover:text-wine hover:decoration-clay"
                   >
                     {decantacao.titulo}
@@ -56,7 +56,7 @@ export default function DecantacoesPage() {
                   {decantacao.trecho}
                 </p>
                 <Link
-                  href={`/textos/${decantacao.slug}`}
+                  href={`/decantacoes/${decantacao.slug}`}
                   aria-label={`Ler ${decantacao.titulo}, publicada em ${formatarDataEditorial(decantacao.data)}`}
                   className="mt-7 inline-block text-sm font-medium text-wine underline decoration-clay/50 transition-colors hover:text-foreground hover:decoration-wine"
                 >
